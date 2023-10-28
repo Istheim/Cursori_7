@@ -17,7 +17,7 @@ class Habit(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='создатель')
     place = models.CharField(max_length=25, verbose_name='место')
     timing = models.TimeField(verbose_name='время')
-    action = models.CharField(max_length=100, verbose_name='привычка')
+    action = models.CharField(max_length=100, verbose_name='действие')
     is_pleasurable = models.BooleanField(default=False, verbose_name='Признак приятной привычки')
     related_habit = models.ForeignKey('self', on_delete=models.CASCADE,
                                       verbose_name='Связанная привычка', **NULLABLE)
@@ -27,7 +27,7 @@ class Habit(models.Model):
     is_public = models.BooleanField(default=False, verbose_name='Признак публичности')
 
     def __str__(self):
-        return f'{self.action}, {self.timing}, {self.place}'
+        return f'Я буду {self.action} в {self.timing} в {self.place}'
 
     class Meta:
         verbose_name = 'привычка'
