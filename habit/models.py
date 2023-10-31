@@ -1,16 +1,19 @@
 from django.db import models
 
-from users.models import User
-
 NULLABLE = {'blank': True, 'null': True}
 
 
 class Habit(models.Model):
     # Добавим периодичность для дальнейшего отслеживания
+
+    EVERY_DAY = 'Ежедневная'
+    THREE_DAY = 'Трехдневная'
+    FOR_WEEK = 'Еженедельная'
+
     FREQUENCY_CHOICES = (
-        (1, 'Ежедневная'),
-        (3, 'Трехдневная'),
-        (7, 'Еженедельная'),
+        (EVERY_DAY, 'Ежедневная'),
+        (THREE_DAY, 'Трехдневная'),
+        (FOR_WEEK, 'Еженедельная'),
 
     )
 
@@ -21,7 +24,7 @@ class Habit(models.Model):
     is_pleasurable = models.BooleanField(default=False, verbose_name='Признак приятной привычки')
     related_habit = models.ForeignKey('self', on_delete=models.CASCADE,
                                       verbose_name='Связанная привычка', **NULLABLE)
-    frequency = models.IntegerField(choices=FREQUENCY_CHOICES, default=1, verbose_name='периодичность')
+    frequency = models.CharField(choices=FREQUENCY_CHOICES, default=EVERY_DAY, verbose_name='периодичность')
     reward = models.CharField(max_length=255, verbose_name='Вознаграждение')
     time_to_perform = models.TimeField(verbose_name='Время на выполнение')
     is_public = models.BooleanField(default=False, verbose_name='Признак публичности')

@@ -6,3 +6,11 @@ pytz
 sqlparse
 pillow
 djangorestframework-simplejwt
+celery
+redis
+requests
+python-dotenv
+django_celery_beat
+django-cors-headers
+drf-yasg
+coverage

@@ -1,5 +1,5 @@
-import re
 from rest_framework.serializers import ValidationError
+from django.utils import timezone
 
 
 class RelatedHabitValidator:
@@ -35,9 +35,11 @@ class MinFrequencyValidator:
     def __call__(self, value):
         frequency = value.get('frequency')
 
-        if frequency < 7:
-            raise ValidationError('Привычку нельзя выполнять реже, чем 1 раз в 7 дней.')
+        if frequency == 'Еженедельная':
+            # Проверяем, что не прошло меньше чем 7 дней с последнего выполнения
+            time_to_perform = value.get('time_to_perform')
+            if time_to_perform:
+                difference = (timezone.now() - time_to_perform).days
+                if difference < 7:
+                    raise ValidationError('Привычку нельзя выполнять реже, чем 1 раз в 7 дней.')
         return value
-
-
-
