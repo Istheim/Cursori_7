@@ -1,4 +1,4 @@
-from builtins import list
+from builtins import list, print
 
 from django.test import TestCase
 from django.urls import reverse
@@ -26,7 +26,7 @@ class HabitTestCase(APITestCase):
             action='drink water',
             is_pleasurable=True,
             frequency='Ежедневная',
-            time_to_perform=90,
+            time_to_perform="90",
             is_public=True
         )
 
@@ -39,13 +39,12 @@ class HabitTestCase(APITestCase):
             "is_pleasurable": True,
             "related_habit": self.related_habit.pk,
             "frequency": 'Ежедневная',
-            "reward": None,
-            "time_to_perform": 120,
+            "time_to_perform": "120",
             "is_public": True
         }
 
         response = self.client.post(reverse("habit:habit-create"), data, format='json')
-
+        print(response.json())
         self.assertEqual(
             response.status_code,
             status.HTTP_201_CREATED
@@ -72,15 +71,15 @@ class HabitTestCase(APITestCase):
             "timing": '10:00',
             "action": 'заниматься',
             "is_pleasurable": True,
-            "related_habit": None,
+            "related_habit": "",
             "frequency": 'Трехдневная',
             "reward": 'съесть сладкое',
-            "time_to_perform": 100,
+            "time_to_perform": "100",
             "is_public": False
         }
 
         response = self.client.patch(
-            reverse('habit:habit-update', kwargs={'pk': self.habit.pk}),
+            reverse('habit:habit-update', kwargs={'pk': self.related_habit.pk}),
             data=data
         )
 
@@ -91,7 +90,7 @@ class HabitTestCase(APITestCase):
 
     def test_habit_destroy(self):
         response = self.client.delete(
-            reverse('habit:habit-delete', kwargs={'pk': self.habit.pk})
+            reverse('habit:habit-delete', kwargs={'pk': self.related_habit.pk})
         )
 
         self.assertEqual(
@@ -106,4 +105,4 @@ class HabitTestCase(APITestCase):
 
     def tearDown(self):
         self.user.delete()
-        self.habit.delete()
+        self.related_habit.delete()
