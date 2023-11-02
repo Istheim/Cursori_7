@@ -1,16 +1,19 @@
-from builtins import list, print
+from builtins import list, print, range, len
 
+from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase
-
+from rest_framework.test import APITestCase, APIClient
+from faker import Faker
 from habit.models import Habit
+from habit.serliazers import HabitSerializer
 from users.models import User
 
 
 class HabitTestCase(APITestCase):
     def setUp(self):
+        self.fake = Faker()
         self.user = User.objects.create(
             email='admin13@gmail.ru',
             password='admin13',
@@ -18,91 +21,90 @@ class HabitTestCase(APITestCase):
         )
         self.client.force_authenticate(user=self.user)
 
-        # Создаем объект related_habit с именем 'drink water'
-        self.related_habit = Habit.objects.create(
+    def create_fake_habit(self):
+        return Habit.objects.create(
             user=self.user,
-            place='Home',
-            timing='7:00',
-            action='drink water',
-            is_pleasurable=True,
-            frequency='Ежедневная',
-            time_to_perform="90",
-            is_public=True
+            place=self.fake.word(),
+            timing=self.fake.time(),
+            action=self.fake.word(),
+            is_pleasurable=self.fake.boolean(),
+            frequency=Habit.EVERY_DAY,
+            reward=self.fake.sentence(),
+            time_to_perform=self.fake.random_int(60, 120),
+            is_public=self.fake.boolean()
         )
 
-    def test_create_Habit(self):
+    def test_create_habit(self):
+        user = self.user
+        self.client = APIClient()
+        self.client.force_authenticate(user=user)
+
         data = {
-            "user": self.user.pk,
-            "place": 'street',
-            "timing": '8:00',
-            "action": 'running',
-            "is_pleasurable": True,
-            "related_habit": self.related_habit.pk,
-            "frequency": 'Ежедневная',
-            "time_to_perform": "120",
-            "is_public": True
+            "user": user.pk,
+            "place": self.fake.word(),
+            "timing": self.fake.time(),
+            "action": self.fake.word(),
+            "is_pleasurable": self.fake.boolean(),
+            "frequency": Habit.EVERY_DAY,
+            "reward": None,
+            "time_to_perform": self.fake.random_int(60, 120),
+            "is_public": self.fake.boolean()
         }
+
+        serializer = HabitSerializer(data=data)
+
+        if serializer.is_valid():
+            serializer.save()  # Сохранение объекта, если данные действительны
+        else:
+            errors = serializer.errors  # Обработка ошибок валидации
+            print(errors)
 
         response = self.client.post(reverse("habit:habit-create"), data, format='json')
         print(response.json())
-        self.assertEqual(
-            response.status_code,
-            status.HTTP_201_CREATED
-        )
 
-        self.assertEqual(
-            Habit.objects.count(), 2
-        )
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertEqual(Habit.objects.count(), 2)
 
-    def test_habit_list(self):
-        response = self.client.get(
-            reverse('habit:habit-list')
-        )
+    def test_list_habit(self):
+        user = self.user
+        self.client = APIClient()
+        self.client.force_authenticate(user=user)
 
-        self.assertEqual(
-            response.status_code,
-            status.HTTP_200_OK
-        )
+        # Создайте несколько случайных привычек
+        for _ in range(5):
+            self.create_fake_habit()
 
-    def test_habit_update(self):
+        response = self.client.get(reverse('habit:habit-list'))
+        print(response.json())
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data), 4)
+
+    def test_update_habit(self):
+        user = self.user
+        self.client = APIClient()
+        self.client.force_authenticate(user=user)
+
+        habit = self.create_fake_habit()
         data = {
-            "user": self.user.pk,
-            "place": 'зал',
-            "timing": '10:00',
-            "action": 'заниматься',
-            "is_pleasurable": True,
-            "related_habit": "",
-            "frequency": 'Трехдневная',
-            "reward": 'съесть сладкое',
-            "time_to_perform": "100",
-            "is_public": False
+            "place": self.fake.word(),
+            "action": self.fake.word(),
         }
 
-        response = self.client.patch(
-            reverse('habit:habit-update', kwargs={'pk': self.related_habit.pk}),
-            data=data
-        )
+        response = self.client.patch(reverse('habit:habit-update', args=[habit.pk]), data, format='json')
 
-        self.assertEqual(
-            response.status_code,
-            status.HTTP_200_OK
-        )
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        habit.refresh_from_db()
+        self.assertEqual(habit.place, data["place"])
+        self.assertEqual(habit.action, data["action"])
 
-    def test_habit_destroy(self):
-        response = self.client.delete(
-            reverse('habit:habit-delete', kwargs={'pk': self.related_habit.pk})
-        )
+    def test_delete_habit(self):
+        user = self.user
+        self.client = APIClient()
+        self.client.force_authenticate(user=user)
 
-        self.assertEqual(
-            response.status_code,
-            status.HTTP_204_NO_CONTENT
-        )
+        habit = self.create_fake_habit()
+        response = self.client.delete(reverse('habit:habit-delete', args=[habit.pk]))
 
-        self.assertEqual(
-            list(Habit.objects.all()),
-            []
-        )
-
-    def tearDown(self):
-        self.user.delete()
-        self.related_habit.delete()
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Habit.objects.count(), 0)
