@@ -84,11 +84,10 @@ WSGI_APPLICATION = 'config.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'cursor7',
+        'NAME': 'postgres',
         'USER': 'postgres',
         'PASSWORD': 'Matvey1234567890',
-        'HOST': '127.0.0.1',
-        'PORT': 5432,
+        'HOST': 'db'
     }
 }
 
@@ -149,7 +148,7 @@ SIMPLE_JWT = {
     'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
 }
 
-CELERY_BROKER_URL = "redis://127.0.0.1:6379/0"
+CELERY_BROKER_URL = "redis://redis:6379/0"
 CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/0"
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
