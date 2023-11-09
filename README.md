@@ -61,3 +61,8 @@
  Оберните в Docker Compose Django-проект с БД PostgreSQL.
  Допишите в docker-compose.yaml работу с Redis.
  Допишите в docker-compose.yaml работу с Celery.
+
+# Как поднять compose?
+
+1. docker-compose build
+2. docker-compose up
