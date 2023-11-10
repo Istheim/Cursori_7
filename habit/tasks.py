@@ -3,7 +3,7 @@ from datetime import datetime
 import pytz
 from celery import shared_task
 from habit.models import Habit
-from bot_post import handle
+from habit.bot_post import handle
 
 
 @shared_task
